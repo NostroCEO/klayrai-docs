@@ -1,0 +1,114 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "KlayrAI",
+  "colors": {
+    "primary": "#2563eb",
+    "light": "#3b82f6",
+    "dark": "#1d4ed8"
+  },
+  "favicon": "/favicon.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "rate-limits",
+              "error-codes",
+              "sdks",
+              "changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API Reference",
+            "pages": [
+              "api-reference/diagnostics",
+              "api-reference/campaigns",
+              "api-reference/reports",
+              "api-reference/accounts",
+              "api-reference/insights"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Concepts",
+        "groups": [
+          {
+            "group": "Concepts",
+            "pages": [
+              "concepts/diagnostic-engine",
+              "concepts/andromeda",
+              "concepts/risk-levels"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png",
+    "href": "https://klayrai.com"
+  },
+  "api": {
+    "mdx": {
+      "server": "https://api.klayrai.com",
+      "auth": {
+        "method": "key",
+        "name": "x-api-key"
+      }
+    }
+  },
+  "background": {
+    "color": {
+      "light": "#f8f8f6",
+      "dark": "#1a1a1a"
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Dashboard",
+        "href": "https://app.klayrai.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get API Key",
+      "href": "https://app.klayrai.com/settings"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/NostroCEO/KlayrAI",
+      "website": "https://klayrai.com"
+    }
+  },
+  "fonts": {
+    "heading": {
+      "family": "Manrope",
+      "weight": 300
+    },
+    "body": {
+      "family": "Manrope",
+      "weight": 400
+    }
+  }
+}
