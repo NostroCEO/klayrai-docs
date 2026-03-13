@@ -1,0 +1,173 @@
+---
+title: "Diagnostic Engine"
+description: "How KlayrAI's AI-powered diagnostic engine analyzes your Meta Ads campaigns"
+---
+
+# Diagnostic Engine
+
+The diagnostic engine is the core of KlayrAI. It uses Claude with programmatic tool calling to analyze your Meta Ads data in a secure sandbox, detect issues, and generate plain-language insights and recommendations.
+
+## Architecture overview
+
+KlayrAI uses a **programmatic tool calling** architecture rather than classical MCP (Model Context Protocol). This approach delivers 85-98% token savings compared to traditional AI agent patterns.
+
+```
+User triggers diagnostic
+        |
+        v
+  +-----------------+
+  | Claude Engine    |  Orchestrates the analysis
+  | (claude-engine)  |
+  +-----------------+
+        |
+        v
+  +-----------------+
+  | Code Execution   |  Claude writes code in a sandbox
+  | Sandbox          |  to call Meta API tools in batch
+  +-----------------+
+        |
+        v
+  +-----------------+
+  | Meta Executor    |  Executes Meta API calls
+  | (meta-executor)  |  (read-only by default)
+  +-----------------+
+        |
+        v
+  +-----------------+
+  | Tool Results     |  Stay INSIDE the sandbox
+  | (never in        |  Never enter Claude's
+  |  context window) |  context window
+  +-----------------+
+        |
+        v
+  +-----------------+
+  | AI Analysis      |  Claude analyzes data
+  |                  |  in the sandbox and
+  |                  |  returns structured output
+  +-----------------+
+```
+
+### Why this matters
+
+In a classical MCP setup, every Meta API response flows back into the AI's context window. A single campaign with 10 ad sets and 50 ads can generate 200KB+ of raw API data. This burns tokens, slows processing, and increases costs.
+
+With programmatic tool calling:
+
+1. Claude writes code in a sandboxed environment
+2. That code calls Meta API tools in batch
+3. All tool results stay inside the sandbox
+4. Claude processes and summarizes the data within the sandbox
+5. Only the structured analysis leaves the sandbox
+
+This means raw Meta API data **never enters Claude's context window** — only the final analysis does.
+
+## What gets analyzed
+
+Each diagnostic examines six categories of potential issues:
+
+<CardGroup cols={2}>
+  <Card title="Creative fatigue" icon="images">
+    Detects when ads have been shown too frequently, causing declining CTR and rising CPM. Tracks frequency trends, CTR decay, and time since creative refresh.
+  </Card>
+  <Card title="Learning phase stalls" icon="graduation-cap">
+    Identifies ad sets stuck in the learning phase due to insufficient conversions, budget constraints, or frequent edits that reset learning.
+  </Card>
+  <Card title="Auction overlap" icon="clone">
+    Finds overlapping audiences across your ad sets and campaigns that cause you to compete against yourself in Meta's auction, inflating CPMs.
+  </Card>
+  <Card title="Pacing issues" icon="gauge-high">
+    Detects campaigns that are significantly over- or under-delivering relative to their daily or lifetime budget targets.
+  </Card>
+  <Card title="Budget degradation" icon="chart-line-down">
+    Identifies campaigns where increasing budget has led to diminishing returns — higher CPA with each budget increment.
+  </Card>
+  <Card title="Audience saturation" icon="users">
+    Tracks reach vs. frequency ratios to detect when you've exhausted your addressable audience and need to expand targeting.
+  </Card>
+</CardGroup>
+
+## How a diagnostic runs
+
+When you trigger a diagnostic (via the dashboard or API), the following sequence executes:
+
+### 1. Data collection
+
+The Claude engine instructs the sandbox to fetch data through the Meta executor:
+
+- Campaign configuration (objective, budget, bid strategy)
+- Ad set details (targeting, optimization, learning phase status)
+- Ad creative metadata (format, age, frequency)
+- Performance insights (last 7-28 days, daily granularity)
+- Historical benchmarks for comparison
+
+### 2. Issue detection
+
+Claude analyzes the collected data against detection thresholds:
+
+| Issue type | Primary signals | Typical threshold |
+|---|---|---|
+| Creative fatigue | Frequency > 2.5, CTR decline > 20% over 7 days | 14+ days same creative |
+| Learning phase stall | < 50 conversions in 7 days while in learning | 5+ days in learning |
+| Auction overlap | Audience overlap > 40% between ad sets | Cross-campaign comparison |
+| Pacing | Delivery < 70% or > 130% of daily budget | Rolling 3-day average |
+| Budget degradation | CPA increase > 15% after budget change | Pre/post budget analysis |
+| Audience saturation | Frequency > 3.0 with reach plateau | 7-day trend analysis |
+
+### 3. Risk scoring
+
+Each detected issue receives a risk level based on severity and potential financial impact:
+
+- **LOW** — Minor issue, no immediate action required
+- **MEDIUM** — Worth monitoring, may require action within 1-2 weeks
+- **HIGH** — Significant issue affecting performance, action recommended within days
+- **CRITICAL** — Severe issue causing substantial budget waste, immediate action needed
+
+The overall diagnostic risk level is the highest risk among all detected issues.
+
+### 4. Recommendation generation
+
+For each issue, Claude generates 1-3 specific, actionable recommendations. Recommendations are adapted based on the user's [Andromeda profile](/concepts/andromeda):
+
+- **Risk appetite** affects how aggressive the suggestions are
+- **Focus metric** determines which improvements are prioritized
+- **Historical behavior** influences confidence in expected outcomes
+
+### 5. Output
+
+The final diagnostic includes:
+
+- A plain-language summary of campaign health
+- Individual issues with severity, evidence, and affected entities
+- Prioritized recommendations with expected impact
+- Andromeda context showing how the analysis was personalized
+
+## Processing time
+
+| Campaign complexity | Typical time |
+|---|---|
+| 1-3 ad sets, < 10 ads | 3-5 seconds |
+| 4-10 ad sets, 10-50 ads | 5-8 seconds |
+| 10+ ad sets, 50+ ads | 8-12 seconds |
+
+<Note>
+  Processing time depends on the volume of data that needs to be fetched from Meta's API and the number of cross-references required for overlap and trend analysis.
+</Note>
+
+## Agents
+
+KlayrAI uses three specialized AI agents, each optimized for its task:
+
+| Agent | Model | Temperature | Max rounds | Purpose |
+|---|---|---|---|---|
+| Diagnostic agent | Claude Opus | 0.1 | 15 | Deep campaign analysis and issue detection |
+| Report agent | Claude Sonnet | 0.3 | 10 | Structured report generation with narrative |
+| Sync agent | Claude Haiku | 0.0 | 5 | Fast data synchronization and validation |
+
+The diagnostic agent uses a low temperature (0.1) to ensure consistent, reproducible analyses. The report agent uses a slightly higher temperature (0.3) to produce more natural narrative text.
+
+## Security
+
+- Meta access tokens are encrypted with AES-256-GCM and decrypted only at the moment of API calls
+- Raw Meta data never leaves the code execution sandbox
+- No campaign data is stored in AI model context or training data
+- All diagnostic results are scoped to the user's workspace

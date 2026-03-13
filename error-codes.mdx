@@ -1,0 +1,307 @@
+---
+title: "Error Codes"
+description: "Complete reference of API error codes and troubleshooting guidance"
+---
+
+# Error Codes
+
+All KlayrAI API errors follow a consistent JSON format. This page documents every error code, what causes it, and how to resolve it.
+
+## Error response format
+
+Every error response includes:
+
+```json
+{
+  "error": {
+    "type": "error_type_here",
+    "message": "A human-readable description of what went wrong."
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `type` | `string` | Machine-readable error type |
+| `message` | `string` | Human-readable error description |
+
+---
+
+## Error code reference
+
+### 400 — Bad Request
+
+<AccordionGroup>
+  <Accordion title="invalid_request">
+    **Cause:** The request body or query parameters are malformed or missing required fields.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "invalid_request",
+        "message": "The 'account_id' field is required."
+      }
+    }
+    ```
+
+    **Resolution:** Check the API reference for required parameters and ensure your request body is valid JSON with the correct field types.
+  </Accordion>
+
+  <Accordion title="invalid_date_range">
+    **Cause:** The date range provided is invalid — either the start date is after the end date, or the range exceeds the maximum allowed period (90 days).
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "invalid_date_range",
+        "message": "Start date must be before end date. Maximum range is 90 days."
+      }
+    }
+    ```
+
+    **Resolution:** Ensure `from` is before `to` and the range does not exceed 90 days.
+  </Accordion>
+
+  <Accordion title="too_many_campaigns">
+    **Cause:** More than 20 campaign IDs were provided in a single request (applies to report generation).
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "too_many_campaigns",
+        "message": "Maximum of 20 campaign IDs allowed per report. You provided 25."
+      }
+    }
+    ```
+
+    **Resolution:** Split your request into multiple reports with 20 or fewer campaigns each.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### 401 — Unauthorized
+
+<AccordionGroup>
+  <Accordion title="authentication_error">
+    **Cause:** The API key is missing, malformed, or invalid.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "authentication_error",
+        "message": "Invalid API key. Check that your API key is correct and has not been revoked."
+      }
+    }
+    ```
+
+    **Resolution:**
+    - Verify the `x-api-key` header is present in your request
+    - Check that the key starts with `klyr_live_` or `klyr_test_`
+    - Ensure the key has not been revoked in your dashboard settings
+    - Confirm there are no extra spaces or characters in the key
+  </Accordion>
+
+  <Accordion title="key_revoked">
+    **Cause:** The API key was previously valid but has been revoked.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "key_revoked",
+        "message": "This API key has been revoked. Create a new key in your dashboard settings."
+      }
+    }
+    ```
+
+    **Resolution:** Create a new API key in **Settings > API Keys** and update your application.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### 403 — Forbidden
+
+<AccordionGroup>
+  <Accordion title="permission_error">
+    **Cause:** The API key does not have permission to access the requested resource. This typically occurs when trying to access a campaign or account that belongs to a different workspace.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "permission_error",
+        "message": "You do not have access to this resource."
+      }
+    }
+    ```
+
+    **Resolution:** Verify that the resource ID belongs to your workspace. API keys can only access data within their own workspace.
+  </Accordion>
+
+  <Accordion title="plan_insufficient">
+    **Cause:** Your current plan does not include API access. The API is available on the Agency plan only.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "plan_insufficient",
+        "message": "API access requires the Agency plan. Upgrade at https://app.klayrai.com/settings/billing."
+      }
+    }
+    ```
+
+    **Resolution:** Upgrade to the Agency plan at [app.klayrai.com/settings/billing](https://app.klayrai.com/settings/billing).
+  </Accordion>
+
+  <Accordion title="white_label_not_available">
+    **Cause:** White-label report options were requested, but this feature requires the Agency plan.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "white_label_not_available",
+        "message": "White-label reports are available on the Agency plan."
+      }
+    }
+    ```
+
+    **Resolution:** Upgrade to the Agency plan or remove the `whiteLabel` object from your request.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### 404 — Not Found
+
+<AccordionGroup>
+  <Accordion title="not_found">
+    **Cause:** The requested resource does not exist or is not accessible in your workspace.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "not_found",
+        "message": "Campaign 'camp_xyz999' not found."
+      }
+    }
+    ```
+
+    **Resolution:**
+    - Check the resource ID for typos
+    - Verify the resource exists by listing resources first (e.g., `GET /v1/campaigns`)
+    - Ensure the resource belongs to your workspace
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### 409 — Conflict
+
+<AccordionGroup>
+  <Accordion title="diagnostic_in_progress">
+    **Cause:** A diagnostic is already running for the specified campaign. Only one diagnostic can run per campaign at a time.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "diagnostic_in_progress",
+        "message": "A diagnostic is already running for campaign camp_abc123. Please wait for it to complete."
+      }
+    }
+    ```
+
+    **Resolution:** Wait for the current diagnostic to complete (typically 5-10 seconds) and then try again, or retrieve the existing diagnostic result.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### 422 — Unprocessable Entity
+
+<AccordionGroup>
+  <Accordion title="campaign_not_synced">
+    **Cause:** The campaign's data has not been synced from Meta yet. Diagnostics require synced data.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "campaign_not_synced",
+        "message": "Campaign camp_abc123 has not been synced yet. Data sync is in progress."
+      }
+    }
+    ```
+
+    **Resolution:** Wait for the initial sync to complete. For newly connected accounts, this typically takes 30-60 seconds.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### 429 — Too Many Requests
+
+<AccordionGroup>
+  <Accordion title="rate_limit_error">
+    **Cause:** You have exceeded the rate limit for your API key.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "rate_limit_error",
+        "message": "Rate limit exceeded. Please retry after 12 seconds."
+      }
+    }
+    ```
+
+    **Resolution:** Implement exponential backoff with jitter. Check the `meta.remaining_requests` field in successful responses to monitor your usage. See the [Rate Limits](/rate-limits) page for detailed guidance.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### 500 — Internal Server Error
+
+<AccordionGroup>
+  <Accordion title="api_error">
+    **Cause:** An unexpected error occurred on the KlayrAI server.
+
+    **Example:**
+    ```json
+    {
+      "error": {
+        "type": "api_error",
+        "message": "An internal error occurred. Please try again. If the problem persists, contact support@klayrai.com."
+      }
+    }
+    ```
+
+    **Resolution:**
+    - Retry the request after a short delay
+    - If the error persists, contact [support@klayrai.com](mailto:support@klayrai.com) with the `requestId` from the error response
+    - Check [status.klayrai.com](https://status.klayrai.com) for any ongoing incidents
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Error handling best practices
+
+<Warning>
+  Always check the HTTP status code first, then the `type` field in the error body. Do not rely on parsing the `message` field — it may change between API versions.
+</Warning>
+
+1. **Handle every status code** — At minimum, handle 400, 401, 403, 404, 429, and 500
+2. **Implement retries for transient errors** — 429 and 500 errors are usually transient and should be retried with backoff
+3. **Do not retry 400, 401, 403, or 404** — These indicate a problem with the request itself, not a transient server issue
+4. **Use structured error handling** — Parse the `type` field for programmatic error handling rather than matching on `message` strings

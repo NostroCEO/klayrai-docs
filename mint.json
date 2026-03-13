@@ -1,0 +1,99 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "KlayrAI",
+  "logo": {
+    "dark": "/logo/dark.png",
+    "light": "/logo/light.png",
+    "href": "https://klayrai.com",
+    "width": 140,
+    "height": 40
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#2563eb",
+    "light": "#3b82f6",
+    "dark": "#1d4ed8",
+    "background": {
+      "dark": "#1a1a1a",
+      "light": "#f8f8f6"
+    }
+  },
+  "font": {
+    "headings": {
+      "family": "Manrope",
+      "weight": 300
+    },
+    "body": {
+      "family": "Manrope",
+      "weight": 400
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://app.klayrai.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get API Key",
+    "url": "https://app.klayrai.com/settings"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Concepts",
+      "url": "concepts"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "authentication"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/diagnostics",
+        "api-reference/campaigns",
+        "api-reference/reports",
+        "api-reference/accounts",
+        "api-reference/insights"
+      ]
+    },
+    {
+      "group": "Concepts",
+      "pages": [
+        "concepts/diagnostic-engine",
+        "concepts/andromeda",
+        "concepts/risk-levels"
+      ]
+    },
+    {
+      "group": "Resources",
+      "pages": [
+        "rate-limits",
+        "error-codes",
+        "sdks",
+        "changelog"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/NostroCEO/KlayrAI",
+    "website": "https://klayrai.com"
+  },
+  "api": {
+    "baseUrl": "https://api.klayrai.com",
+    "auth": {
+      "method": "key",
+      "name": "x-api-key"
+    }
+  }
+}

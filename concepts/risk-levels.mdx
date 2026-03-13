@@ -1,0 +1,196 @@
+---
+title: "Risk Levels"
+description: "Understanding KlayrAI's four-tier risk classification system for campaign diagnostics"
+---
+
+# Risk Levels
+
+Every diagnostic issue detected by KlayrAI is assigned a risk level that indicates its severity and urgency. The overall diagnostic risk level is the highest risk among all detected issues.
+
+## The four tiers
+
+<CardGroup cols={2}>
+  <Card title="LOW" icon="circle-check" color="#22c55e">
+    Minor issue. No immediate action required. Monitor over the next 1-2 weeks.
+  </Card>
+  <Card title="MEDIUM" icon="triangle-exclamation" color="#f59e0b">
+    Moderate issue. May require attention within 1-2 weeks if the trend continues.
+  </Card>
+  <Card title="HIGH" icon="circle-exclamation" color="#f97316">
+    Significant issue actively affecting performance. Action recommended within days.
+  </Card>
+  <Card title="CRITICAL" icon="hexagon-exclamation" color="#ef4444">
+    Severe issue causing substantial budget waste. Immediate action needed.
+  </Card>
+</CardGroup>
+
+---
+
+## Detailed definitions
+
+### LOW
+
+**Color:** Green (`#22c55e`)
+
+A low-risk issue is an early signal that something may be shifting. It does not yet affect campaign performance in a meaningful way but is worth noting.
+
+**Characteristics:**
+- Financial impact is less than 5% of campaign spend
+- Trend is just beginning (1-3 days)
+- Performance metrics are still within acceptable range
+- May resolve on its own without intervention
+
+**Examples:**
+| Issue type | LOW threshold |
+|---|---|
+| Creative fatigue | Frequency 2.0-2.5 with CTR decline < 10% |
+| Learning phase | 3 days in learning with adequate conversion velocity |
+| Pacing | Delivery at 80-90% of target budget |
+| Budget degradation | CPA increase of 5-10% after budget change |
+| Audience saturation | Frequency 2.0-2.5 with stable reach |
+
+**Typical recommendation tone:**
+> "Worth monitoring. No immediate action needed, but keep an eye on this over the next week."
+
+---
+
+### MEDIUM
+
+**Color:** Amber (`#f59e0b`)
+
+A medium-risk issue shows a clear trend that, if left unchecked, will degrade campaign performance. It warrants attention within 1-2 weeks.
+
+**Characteristics:**
+- Financial impact is 5-15% of campaign spend
+- Trend has persisted for 4-7 days
+- Performance metrics are declining but not yet critical
+- Unlikely to resolve without intervention
+
+**Examples:**
+| Issue type | MEDIUM threshold |
+|---|---|
+| Creative fatigue | Frequency 2.5-3.5 with CTR decline 10-20% |
+| Learning phase | 5 days in learning with slow conversion velocity |
+| Auction overlap | 40-55% audience overlap between ad sets |
+| Pacing | Delivery at 70-80% or 120-130% of target budget |
+| Budget degradation | CPA increase of 10-20% after budget change |
+| Audience saturation | Frequency 2.5-3.0 with declining reach |
+
+**Typical recommendation tone:**
+> "We recommend taking action within the next few days. The trend is clear and will likely worsen without changes."
+
+---
+
+### HIGH
+
+**Color:** Orange (`#f97316`)
+
+A high-risk issue is actively hurting campaign performance. Budget is being wasted or opportunities are being missed. Action should be taken within days.
+
+**Characteristics:**
+- Financial impact is 15-30% of campaign spend
+- Trend has persisted for 7+ days or is accelerating
+- Performance metrics have meaningfully degraded
+- Will continue to worsen without intervention
+- Multiple issues may be compounding
+
+**Examples:**
+| Issue type | HIGH threshold |
+|---|---|
+| Creative fatigue | Frequency > 3.5 with CTR decline > 20% |
+| Learning phase | 7+ days in learning with insufficient conversions |
+| Auction overlap | 55-70% audience overlap causing CPM inflation |
+| Pacing | Delivery at 50-70% or 130-150% of target budget |
+| Budget degradation | CPA increase of 20-40% after budget change |
+| Audience saturation | Frequency > 3.0 with reach plateau |
+
+**Typical recommendation tone:**
+> "This is significantly impacting your performance. We recommend making changes within the next 1-2 days to prevent further waste."
+
+---
+
+### CRITICAL
+
+**Color:** Red (`#ef4444`)
+
+A critical-risk issue represents a severe problem causing substantial budget waste or campaign failure. Immediate action is required.
+
+**Characteristics:**
+- Financial impact exceeds 30% of campaign spend
+- Issue is causing clear and measurable budget waste
+- Performance has degraded dramatically from baseline
+- May involve multiple compounding issues
+- Every day of inaction compounds the damage
+
+**Examples:**
+| Issue type | CRITICAL threshold |
+|---|---|
+| Creative fatigue | Frequency > 5.0 with CTR collapse > 40% |
+| Learning phase | 10+ days in learning, campaign effectively stalled |
+| Auction overlap | > 70% audience overlap, severe self-competition |
+| Pacing | Delivery < 50% or > 150% of target budget |
+| Budget degradation | CPA increase > 40% with no efficiency recovery |
+| Audience saturation | Frequency > 4.0 with declining conversions |
+
+**Typical recommendation tone:**
+> "This requires immediate attention. You are losing significant budget to this issue every day. Here is what you should do right now."
+
+---
+
+## How risk levels are calculated
+
+Risk level assignment considers multiple factors:
+
+1. **Metric deviation** — How far the current value is from the baseline or target
+2. **Trend duration** — How long the negative trend has persisted
+3. **Trend velocity** — Whether the issue is stable, worsening slowly, or accelerating
+4. **Financial impact** — Estimated wasted spend or missed revenue
+5. **Compounding effects** — Whether multiple issues interact to amplify impact
+
+<Note>
+  Risk levels are relative to each campaign's own history and targets, not absolute thresholds. A CPA of EUR 20 might be LOW risk for a high-AOV e-commerce brand but CRITICAL for a mobile app install campaign.
+</Note>
+
+## Risk level in the API
+
+Diagnostic responses include risk levels at both the issue and diagnostic level:
+
+```json
+{
+  "riskLevel": "HIGH",
+  "issues": [
+    {
+      "type": "CREATIVE_FATIGUE",
+      "severity": "HIGH"
+    },
+    {
+      "type": "LEARNING_PHASE_STALL",
+      "severity": "MEDIUM"
+    }
+  ]
+}
+```
+
+The top-level `riskLevel` is always the maximum severity among all issues.
+
+## Filtering by risk level
+
+In both the dashboard and API, you can filter diagnostics by risk level to focus on what matters most:
+
+```bash
+curl "https://api.klayrai.com/v1/diagnostics?riskLevel=HIGH&riskLevel=CRITICAL" \
+  -H "x-api-key: klyr_live_abc123def456ghi789"
+```
+
+## Dashboard display
+
+In the KlayrAI dashboard, risk levels are displayed as color-coded badges:
+
+| Level | Badge color | Background |
+|---|---|---|
+| LOW | Green text | Green/10 background |
+| MEDIUM | Amber text | Amber/10 background |
+| HIGH | Orange text | Orange/10 background |
+| CRITICAL | Red text | Red/10 background |
+
+The risk donut chart on the dashboard overview shows the distribution of risk levels across all recent diagnostics, giving you a quick visual summary of portfolio health.

@@ -1,0 +1,353 @@
+---
+title: "Diagnostics"
+description: "Run AI-powered diagnostics on your Meta Ads campaigns and retrieve results"
+---
+
+# Diagnostics
+
+The Diagnostics API lets you trigger AI-powered analyses of your Meta Ads campaigns and retrieve the results. Each diagnostic examines campaign performance, detects issues, assigns risk levels, and generates prioritized recommendations.
+
+---
+
+## List diagnostics
+
+<api method="GET" path="/v1/diagnostics" />
+
+Retrieve a paginated list of diagnostics for your workspace.
+
+### Query parameters
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `account_id` | `string` | No | — | Filter by ad account ID |
+| `risk_level` | `string` | No | — | Filter by risk level: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL` |
+| `date_start` | `string` | No | — | Start date (`YYYY-MM-DD`) |
+| `date_end` | `string` | No | — | End date (`YYYY-MM-DD`) |
+| `page` | `integer` | No | `1` | Page number |
+| `page_size` | `integer` | No | `20` | Results per page (max 100) |
+
+### Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.klayrai.com/v1/diagnostics?risk_level=HIGH&page=1&page_size=10" \
+  -H "x-api-key: klyr_live_abc123def456ghi789" \
+  -H "klayrai-version: 2026-03-01"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  risk_level: "HIGH",
+  page: "1",
+  page_size: "10",
+});
+
+const response = await fetch(
+  `https://api.klayrai.com/v1/diagnostics?${params}`,
+  {
+    headers: {
+      "x-api-key": "klyr_live_abc123def456ghi789",
+      "klayrai-version": "2026-03-01",
+    },
+  }
+);
+
+const data = await response.json();
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "id": "diag_8f2k4n6m",
+      "campaignId": "camp_abc123",
+      "campaignName": "Summer Sale 2026 - TOF",
+      "status": "completed",
+      "riskLevel": "HIGH",
+      "summary": "Campaign is spending 40% above target CPA with declining ROAS over the past 7 days. Primary driver is creative fatigue on the top-performing ad set.",
+      "issuesDetected": 3,
+      "recommendationCount": 2,
+      "createdAt": "2026-03-10T14:30:00Z",
+      "completedAt": "2026-03-10T14:30:08Z"
+    },
+    {
+      "id": "diag_3j7h9p2q",
+      "campaignId": "camp_def456",
+      "campaignName": "Retargeting - Cart Abandoners",
+      "status": "completed",
+      "riskLevel": "HIGH",
+      "summary": "Audience overlap of 62% detected between this campaign and 'Retargeting - Viewers'. This is inflating CPMs and causing auction competition against yourself.",
+      "issuesDetected": 2,
+      "recommendationCount": 3,
+      "createdAt": "2026-03-10T12:15:00Z",
+      "completedAt": "2026-03-10T12:15:06Z"
+    }
+  ],
+  "pagination": {
+    "total": 47,
+    "page": 1,
+    "page_size": 10,
+    "hasMore": true
+  }
+}
+```
+
+---
+
+## Get diagnostic detail
+
+<api method="GET" path="/v1/diagnostics/{id}" />
+
+Retrieve the full detail of a single diagnostic, including all issues and recommendations.
+
+### Path parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The diagnostic ID (e.g., `diag_8f2k4n6m`) |
+
+### Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.klayrai.com/v1/diagnostics/diag_8f2k4n6m" \
+  -H "x-api-key: klyr_live_abc123def456ghi789" \
+  -H "klayrai-version: 2026-03-01"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  "https://api.klayrai.com/v1/diagnostics/diag_8f2k4n6m",
+  {
+    headers: {
+      "x-api-key": "klyr_live_abc123def456ghi789",
+      "klayrai-version": "2026-03-01",
+    },
+  }
+);
+
+const data = await response.json();
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "diag_8f2k4n6m",
+    "campaignId": "camp_abc123",
+    "campaignName": "Summer Sale 2026 - TOF",
+    "metaCampaignId": "23851234567890",
+    "status": "completed",
+    "riskLevel": "HIGH",
+    "summary": "Campaign is spending 40% above target CPA with declining ROAS over the past 7 days. Primary driver is creative fatigue on the top-performing ad set.",
+    "dateRange": {
+      "from": "2026-03-03",
+      "to": "2026-03-10"
+    },
+    "metrics": {
+      "spend": 2840.50,
+      "impressions": 412000,
+      "clicks": 8240,
+      "conversions": 142,
+      "cpa": 20.00,
+      "roas": 2.1,
+      "ctr": 2.0,
+      "cpm": 6.89,
+      "currency": "EUR"
+    },
+    "issues": [
+      {
+        "id": "issue_001",
+        "type": "CREATIVE_FATIGUE",
+        "severity": "HIGH",
+        "title": "Creative fatigue detected on ad set 'Broad Lookalike 1%'",
+        "description": "The top 3 creatives in this ad set have been running for 14 days with a 35% increase in frequency and a 22% decline in CTR. Audience saturation is likely.",
+        "affectedEntity": {
+          "type": "adSet",
+          "id": "adset_xyz789",
+          "name": "Broad Lookalike 1%"
+        },
+        "evidence": {
+          "frequencyTrend": [1.2, 1.4, 1.6, 1.8, 2.0, 2.1, 2.3],
+          "ctrTrend": [2.8, 2.6, 2.4, 2.3, 2.1, 2.0, 1.9]
+        }
+      },
+      {
+        "id": "issue_002",
+        "type": "CPA_DEGRADATION",
+        "severity": "HIGH",
+        "title": "CPA increased 40% above target",
+        "description": "Target CPA is EUR 14.00 but actual CPA has risen to EUR 20.00 over the past 7 days. This correlates with the creative fatigue in the primary ad set.",
+        "affectedEntity": {
+          "type": "campaign",
+          "id": "camp_abc123",
+          "name": "Summer Sale 2026 - TOF"
+        },
+        "evidence": {
+          "targetCpa": 14.00,
+          "actualCpa": 20.00,
+          "cpaTrend": [14.20, 15.10, 16.40, 17.80, 18.50, 19.20, 20.00]
+        }
+      },
+      {
+        "id": "issue_003",
+        "type": "LEARNING_PHASE_STALL",
+        "severity": "MEDIUM",
+        "title": "Ad set 'Interest Stack - Fitness' stuck in learning",
+        "description": "This ad set has been in the learning phase for 5 days with only 18 conversions (50 required to exit). Current daily spend is too low to generate enough conversions.",
+        "affectedEntity": {
+          "type": "adSet",
+          "id": "adset_lmn456",
+          "name": "Interest Stack - Fitness"
+        },
+        "evidence": {
+          "daysInLearning": 5,
+          "conversionsInLearning": 18,
+          "requiredConversions": 50
+        }
+      }
+    ],
+    "recommendations": [
+      {
+        "id": "rec_001",
+        "priority": 1,
+        "action": "Refresh creatives in 'Broad Lookalike 1%' ad set",
+        "rationale": "The current creatives are fatigued after 14 days. Introducing 3-5 new creatives will reset frequency and likely recover CTR to previous levels.",
+        "expectedImpact": "Estimated 15-25% CPA reduction within 5-7 days",
+        "riskLevel": "LOW",
+        "relatedIssues": ["issue_001", "issue_002"]
+      },
+      {
+        "id": "rec_002",
+        "priority": 2,
+        "action": "Increase daily budget on 'Interest Stack - Fitness' by 30% or consolidate into a performing ad set",
+        "rationale": "The ad set cannot exit learning phase at current spend levels. Either increase budget to accelerate learning or reallocate the budget to a proven ad set.",
+        "expectedImpact": "Learning phase exit within 3-4 days if budget increased",
+        "riskLevel": "MEDIUM",
+        "relatedIssues": ["issue_003"]
+      }
+    ],
+    "andromedaContext": {
+      "riskAppetite": "MEDIUM",
+      "focusMetric": "ROAS",
+      "adaptations": "Recommendations prioritize ROAS recovery over volume. Conservative budget suggestions aligned with medium risk appetite."
+    },
+    "createdAt": "2026-03-10T14:30:00Z",
+    "completedAt": "2026-03-10T14:30:08Z",
+    "processingTimeMs": 8200
+  }
+}
+```
+
+---
+
+## Run a diagnostic
+
+<api method="POST" path="/v1/diagnostics" />
+
+Trigger a new AI diagnostic on a specific campaign. The diagnostic runs asynchronously and typically completes within 5-10 seconds.
+
+### Request body
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `account_id` | `string` | Yes | — | The Meta ad account ID to diagnose |
+| `campaign_id` | `string` | No | — | Limit the diagnostic to a specific campaign |
+| `date_start` | `string` | No | 7 days ago | Start date in `YYYY-MM-DD` format |
+| `date_end` | `string` | No | Today | End date in `YYYY-MM-DD` format |
+
+### Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.klayrai.com/v1/diagnostics" \
+  -H "x-api-key: klyr_live_abc123def456ghi789" \
+  -H "klayrai-version: 2026-03-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "act_123456789",
+    "campaign_id": "camp_abc123",
+    "date_start": "2026-03-03",
+    "date_end": "2026-03-10"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  "https://api.klayrai.com/v1/diagnostics",
+  {
+    method: "POST",
+    headers: {
+      "x-api-key": "klyr_live_abc123def456ghi789",
+      "klayrai-version": "2026-03-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      account_id: "act_123456789",
+      campaign_id: "camp_abc123",
+      date_start: "2026-03-03",
+      date_end: "2026-03-10",
+    }),
+  }
+);
+
+const data = await response.json();
+```
+
+</CodeGroup>
+
+### Response
+
+The initial response returns immediately with status `pending`:
+
+```json
+{
+  "data": {
+    "id": "diag_9k3m5p7r",
+    "campaignId": "camp_abc123",
+    "status": "pending",
+    "createdAt": "2026-03-10T15:00:00Z",
+    "estimatedCompletionSeconds": 8
+  }
+}
+```
+
+<Note>
+  Poll `GET /v1/diagnostics/{id}` to check for completion. Diagnostics typically complete within 5-10 seconds.
+</Note>
+
+---
+
+## Error codes
+
+| Status | Code | Description |
+|---|---|---|
+| `400` | `invalid_request` | Missing or invalid parameters (e.g., invalid campaign ID format) |
+| `401` | `authentication_error` | Invalid or missing API key |
+| `403` | `plan_insufficient` | API access requires the Agency plan |
+| `404` | `not_found` | Campaign or diagnostic not found |
+| `409` | `diagnostic_in_progress` | A diagnostic is already running for this campaign |
+| `422` | `campaign_not_synced` | Campaign data has not been synced yet — trigger a sync first |
+| `429` | `rate_limit_error` | Too many diagnostic requests. Max 10 per minute per API key. |
+| `500` | `api_error` | Internal server error |
+
+### Example error
+
+```json
+{
+  "error": {
+    "type": "diagnostic_in_progress",
+    "message": "A diagnostic is already running for campaign camp_abc123. Please wait for it to complete before triggering another."
+  }
+}
+```

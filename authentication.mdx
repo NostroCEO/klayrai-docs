@@ -1,0 +1,154 @@
+---
+title: "Authentication"
+description: "Authenticate with the KlayrAI API using API keys"
+---
+
+# Authentication
+
+All API requests to KlayrAI require authentication via an API key passed in the request headers. API access is available on the **Agency** plan.
+
+## API keys
+
+API keys are scoped to your workspace and inherit the permissions of the workspace owner. Each workspace can have up to 5 active API keys.
+
+### Creating a key
+
+1. Open your dashboard at [app.klayrai.com](https://app.klayrai.com)
+2. Navigate to **Settings > API Keys**
+3. Click **Create API Key**
+4. Give the key a descriptive name (e.g., "Production", "Staging")
+5. Copy the key immediately — it will only be shown once
+
+<Warning>
+  Store your API key in a secure location such as an environment variable or a secrets manager. Never commit API keys to version control or embed them in client-side code.
+</Warning>
+
+### Rotating a key
+
+To rotate a key without downtime:
+
+1. Create a new API key
+2. Update your application to use the new key
+3. Verify that requests succeed with the new key
+4. Revoke the old key
+
+### Revoking a key
+
+1. Navigate to **Settings > API Keys**
+2. Click the **Revoke** button next to the key
+3. Confirm the action
+
+Revoked keys are immediately invalidated. Any in-flight requests using the revoked key will fail with a `401` error.
+
+## Required headers
+
+Every API request must include the following headers:
+
+| Header | Required | Description |
+|---|---|---|
+| `x-api-key` | Yes | Your API key |
+| `klayrai-version` | Recommended | API version date string (e.g., `2026-03-01`). If omitted, the latest version is used. Pinning a version protects your integration from breaking changes. |
+| `Content-Type` | Yes (for POST/PUT) | Must be `application/json` for request bodies |
+
+## Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.klayrai.com/v1/campaigns" \
+  -H "x-api-key: klyr_live_abc123def456ghi789" \
+  -H "klayrai-version: 2026-03-01" \
+  -H "Content-Type: application/json"
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.klayrai.com/v1/campaigns", {
+  method: "GET",
+  headers: {
+    "x-api-key": "klyr_live_abc123def456ghi789",
+    "klayrai-version": "2026-03-01",
+    "Content-Type": "application/json",
+  },
+});
+
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.klayrai.com/v1/campaigns",
+    headers={
+        "x-api-key": "klyr_live_abc123def456ghi789",
+        "klayrai-version": "2026-03-01",
+        "Content-Type": "application/json",
+    },
+)
+
+data = response.json()
+```
+
+</CodeGroup>
+
+## Key format
+
+API keys follow this format:
+
+```
+klyr_live_<32 alphanumeric characters>
+klyr_test_<32 alphanumeric characters>
+```
+
+- **`klyr_live_`** keys access production data
+- **`klyr_test_`** keys access sandbox data (coming soon)
+
+## Authentication errors
+
+| Status | Error code | Description |
+|---|---|---|
+| `401` | `authentication_error` | Missing or invalid API key |
+| `401` | `key_revoked` | The API key has been revoked |
+| `403` | `permission_error` | The API key does not have access to this resource |
+| `403` | `plan_insufficient` | Your plan does not include API access (upgrade to Agency) |
+
+### Example error response
+
+```json
+{
+  "error": {
+    "type": "authentication_error",
+    "message": "Invalid API key. Check that your API key is correct and has not been revoked."
+  }
+}
+```
+
+## Security best practices
+
+<AccordionGroup>
+  <Accordion title="Use environment variables">
+    Store your API key in an environment variable rather than hardcoding it:
+
+    ```bash
+    export KLAYRAI_API_KEY="klyr_live_abc123def456ghi789"
+    ```
+
+    Then reference it in your code:
+
+    ```javascript
+    const apiKey = process.env.KLAYRAI_API_KEY;
+    ```
+  </Accordion>
+
+  <Accordion title="Restrict key usage by environment">
+    Create separate API keys for development, staging, and production. This limits the blast radius if a key is compromised.
+  </Accordion>
+
+  <Accordion title="Monitor key usage">
+    Review API key activity in your dashboard under **Settings > API Keys > Usage**. Look for unexpected spikes in request volume or requests from unfamiliar IP addresses.
+  </Accordion>
+
+  <Accordion title="Rotate keys regularly">
+    Rotate your API keys every 90 days as a best practice. Use the rotation process described above to avoid downtime.
+  </Accordion>
+</AccordionGroup>

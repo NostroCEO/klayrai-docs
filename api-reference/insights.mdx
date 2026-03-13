@@ -1,0 +1,210 @@
+---
+title: "Insights"
+description: "Retrieve aggregated performance insights across your Meta Ads accounts"
+---
+
+# Insights
+
+The Insights API provides aggregated performance summaries across your connected Meta Ads accounts. Use it to build dashboards, track KPIs, and monitor trends.
+
+---
+
+## Get insights summary
+
+<api method="GET" path="/v1/insights/summary" />
+
+Retrieve an aggregated performance summary across all or selected campaigns and accounts.
+
+### Query parameters
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `date_start` | `string` | No | — | Start date in `YYYY-MM-DD` format |
+| `date_end` | `string` | No | — | End date in `YYYY-MM-DD` format |
+
+### Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.klayrai.com/v1/insights/summary?date_start=2026-03-03&date_end=2026-03-10" \
+  -H "x-api-key: klyr_live_abc123def456ghi789" \
+  -H "klayrai-version: 2026-03-01"
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  date_start: "2026-03-03",
+  date_end: "2026-03-10",
+});
+
+const response = await fetch(
+  `https://api.klayrai.com/v1/insights/summary?${params}`,
+  {
+    headers: {
+      "x-api-key": "klyr_live_abc123def456ghi789",
+      "klayrai-version": "2026-03-01",
+    },
+  }
+);
+
+const data = await response.json();
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "data": {
+    "dateRange": {
+      "from": "2026-03-03",
+      "to": "2026-03-10"
+    },
+    "granularity": "daily",
+    "currency": "EUR",
+    "totals": {
+      "spend": 3400.50,
+      "impressions": 507000,
+      "clicks": 12040,
+      "conversions": 231,
+      "cpa": 14.72,
+      "roas": 3.2,
+      "ctr": 2.37,
+      "cpm": 6.71,
+      "frequency": 1.8,
+      "reach": 281667
+    },
+    "trends": {
+      "spendChange": 8.2,
+      "conversionsChange": -3.5,
+      "cpaChange": 12.1,
+      "roasChange": -5.8
+    },
+    "timeSeries": [
+      {
+        "date": "2026-03-03",
+        "spend": 460.00,
+        "conversions": 38,
+        "cpa": 12.10,
+        "roas": 3.8
+      },
+      {
+        "date": "2026-03-04",
+        "spend": 475.50,
+        "conversions": 36,
+        "cpa": 13.21,
+        "roas": 3.5
+      },
+      {
+        "date": "2026-03-05",
+        "spend": 490.00,
+        "conversions": 35,
+        "cpa": 14.00,
+        "roas": 3.3
+      },
+      {
+        "date": "2026-03-06",
+        "spend": 480.00,
+        "conversions": 33,
+        "cpa": 14.55,
+        "roas": 3.1
+      },
+      {
+        "date": "2026-03-07",
+        "spend": 500.00,
+        "conversions": 31,
+        "cpa": 16.13,
+        "roas": 2.8
+      },
+      {
+        "date": "2026-03-08",
+        "spend": 495.00,
+        "conversions": 30,
+        "cpa": 16.50,
+        "roas": 2.7
+      },
+      {
+        "date": "2026-03-09",
+        "spend": 500.00,
+        "conversions": 28,
+        "cpa": 17.86,
+        "roas": 2.5
+      }
+    ],
+    "breakdown": [
+      {
+        "entity": {
+          "type": "campaign",
+          "id": "camp_abc123",
+          "name": "Summer Sale 2026 - TOF"
+        },
+        "spend": 2840.50,
+        "conversions": 142,
+        "cpa": 20.00,
+        "roas": 2.1
+      },
+      {
+        "entity": {
+          "type": "campaign",
+          "id": "camp_def456",
+          "name": "Retargeting - Cart Abandoners"
+        },
+        "spend": 560.00,
+        "conversions": 89,
+        "cpa": 6.29,
+        "roas": 5.8
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Metrics reference
+
+| Metric | Type | Description |
+|---|---|---|
+| `spend` | `number` | Total amount spent in the account currency |
+| `impressions` | `integer` | Total number of times ads were shown |
+| `clicks` | `integer` | Total link clicks |
+| `conversions` | `integer` | Total conversion events (based on Meta pixel or CAPI) |
+| `cpa` | `number` | Cost per acquisition (spend / conversions) |
+| `roas` | `number` | Return on ad spend (revenue / spend) |
+| `ctr` | `number` | Click-through rate as a percentage (clicks / impressions * 100) |
+| `cpm` | `number` | Cost per 1,000 impressions (spend / impressions * 1000) |
+| `frequency` | `number` | Average number of times each person saw your ad |
+| `reach` | `integer` | Number of unique people who saw your ad |
+
+---
+
+## Trend indicators
+
+The `trends` object shows percentage changes compared to the previous equivalent period. For example, if `dateRange` is `last_7d`, trends compare against the 7 days prior.
+
+| Field | Description |
+|---|---|
+| `spendChange` | Percentage change in total spend |
+| `conversionsChange` | Percentage change in total conversions |
+| `cpaChange` | Percentage change in CPA (positive = worse) |
+| `roasChange` | Percentage change in ROAS (negative = worse) |
+
+<Note>
+  A positive `cpaChange` means CPA increased (costs went up). A negative `roasChange` means ROAS decreased (efficiency dropped). The diagnostic engine uses these trends as one of many signals for issue detection.
+</Note>
+
+---
+
+## Error codes
+
+| Status | Code | Description |
+|---|---|---|
+| `400` | `invalid_request` | Invalid query parameters or date range |
+| `400` | `invalid_date_range` | `from` date is after `to` date, or range exceeds 90 days |
+| `401` | `authentication_error` | Invalid or missing API key |
+| `403` | `plan_insufficient` | API access requires the Agency plan |
+| `404` | `not_found` | One or more campaign IDs not found |
+| `429` | `rate_limit_error` | Rate limit exceeded |
+| `500` | `api_error` | Internal server error |

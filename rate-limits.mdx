@@ -1,0 +1,160 @@
+---
+title: "Rate Limits"
+description: "API rate limiting policy and best practices for handling limits"
+---
+
+# Rate Limits
+
+KlayrAI enforces rate limits to ensure fair usage and platform stability. Limits are applied per API key.
+
+## Default limits
+
+| Operation type | Limit | Window |
+|---|---|---|
+| **Read requests** (GET) | 120 requests | Per minute |
+| **Write requests** (POST, PUT, DELETE) | 10 requests | Per minute |
+| **Diagnostic runs** | 10 runs | Per minute |
+| **Report generations** | 5 generations | Per minute |
+
+<Note>
+  These limits apply to the Agency plan API. Dashboard usage has separate, more generous limits that are not publicly documented.
+</Note>
+
+## Rate limit information
+
+<Warning>
+  Rate limit headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After`) are **not** currently returned in HTTP response headers. Instead, rate limit information is included in the JSON response body in the `meta.remaining_requests` field.
+</Warning>
+
+### Example response with rate limit info
+
+```json
+{
+  "data": [ ... ],
+  "meta": {
+    "remaining_requests": 87
+  },
+  "pagination": {
+    "total": 12,
+    "page": 1,
+    "page_size": 20,
+    "hasMore": false
+  }
+}
+```
+
+## Handling rate limits
+
+When you exceed the rate limit, the API returns a `429 Too Many Requests` response:
+
+```json
+{
+  "error": {
+    "type": "rate_limit_error",
+    "message": "Rate limit exceeded. Please retry after 12 seconds."
+  }
+}
+```
+
+### Recommended retry strategy
+
+Implement exponential backoff with jitter:
+
+<CodeGroup>
+
+```javascript JavaScript
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.status !== 429) {
+      return response;
+    }
+
+    if (attempt === maxRetries) {
+      throw new Error("Rate limit exceeded after maximum retries");
+    }
+
+    // Exponential backoff: 1s, 2s, 4s
+    const baseDelay = Math.pow(2, attempt) * 1000;
+
+    // Add jitter: random delay between 0-1000ms
+    const jitter = Math.random() * 1000;
+    const delay = baseDelay + jitter;
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+}
+```
+
+```python Python
+import time
+import random
+import requests
+
+def fetch_with_retry(url, headers, max_retries=3):
+    for attempt in range(max_retries + 1):
+        response = requests.get(url, headers=headers)
+
+        if response.status_code != 429:
+            return response
+
+        if attempt == max_retries:
+            raise Exception("Rate limit exceeded after maximum retries")
+
+        # Exponential backoff: 1s, 2s, 4s
+        base_delay = 2 ** attempt
+
+        # Add jitter: random delay between 0-1 seconds
+        jitter = random.random()
+        delay = base_delay + jitter
+
+        time.sleep(delay)
+```
+
+</CodeGroup>
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Monitor remaining requests">
+    Check the `meta.remaining_requests` field in each JSON response. When it drops below 10% of the limit, slow down your request rate proactively rather than waiting for a 429.
+  </Accordion>
+
+  <Accordion title="Batch where possible">
+    Instead of making individual requests for each campaign, use list endpoints with filters to fetch multiple records in a single request.
+
+    ```bash
+    # Instead of 10 individual requests:
+    # GET /v1/campaigns/camp_001
+    # GET /v1/campaigns/camp_002
+    # ...
+
+    # Use a single list request:
+    curl "https://api.klayrai.com/v1/campaigns?page_size=100"
+    ```
+  </Accordion>
+
+  <Accordion title="Cache responses">
+    Campaign and account data changes infrequently. Cache GET responses for 60-300 seconds to reduce unnecessary API calls.
+  </Accordion>
+
+  <Accordion title="Use polling intervals for async operations">
+    When waiting for a diagnostic or report to complete, poll `GET /v1/diagnostics/{id}` at reasonable intervals (every 2-3 seconds) rather than sending rapid requests. Diagnostics typically complete within 5-10 seconds.
+  </Accordion>
+
+  <Accordion title="Spread requests over time">
+    If you need to run diagnostics on 50 campaigns, don't fire all 50 at once. Spread them over 5 minutes (10 per minute) to stay within limits.
+  </Accordion>
+</AccordionGroup>
+
+## Rate limit increases
+
+If your use case requires higher limits, contact us at [support@klayrai.com](mailto:support@klayrai.com) with:
+
+- Your workspace ID
+- Current usage patterns
+- Requested limits with justification
+- Expected request volume
+
+Rate limit increases are reviewed on a case-by-case basis and typically granted within 1-2 business days.

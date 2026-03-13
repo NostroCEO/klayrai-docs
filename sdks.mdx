@@ -1,0 +1,143 @@
+---
+title: "SDKs"
+description: "Official KlayrAI client libraries for popular programming languages"
+---
+
+# SDKs
+
+Official KlayrAI client libraries are currently in development. In the meantime, you can interact with the API directly using HTTP requests.
+
+## Coming soon
+
+<CardGroup cols={2}>
+  <Card title="JavaScript / TypeScript" icon="js">
+    **`@klayrai/sdk`**
+
+    Full TypeScript support with type-safe request and response objects. Works with Node.js 18+ and modern browsers.
+
+    **Status:** In development — estimated Q2 2026
+  </Card>
+  <Card title="Python" icon="python">
+    **`klayrai`**
+
+    Pythonic interface with async support. Compatible with Python 3.9+.
+
+    **Status:** In development — estimated Q2 2026
+  </Card>
+</CardGroup>
+
+## Preview: JavaScript SDK
+
+Here is a preview of the planned SDK interface:
+
+```typescript
+import { KlayrAI } from "@klayrai/sdk";
+
+const klayrai = new KlayrAI({
+  apiKey: process.env.KLAYRAI_API_KEY,
+  version: "2026-03-01",
+});
+
+// List campaigns
+const campaigns = await klayrai.campaigns.list({
+  page_size: 10,
+});
+
+// Run a diagnostic
+const diagnostic = await klayrai.diagnostics.run({
+  account_id: "act_123456789",
+  campaign_id: "camp_abc123",
+  date_start: "2026-03-03",
+  date_end: "2026-03-10",
+});
+
+// Wait for completion
+const result = await klayrai.diagnostics.waitForCompletion(diagnostic.id, {
+  pollInterval: 2000,
+  timeout: 30000,
+});
+
+console.log(result.summary);
+console.log(result.issues);
+console.log(result.recommendations);
+```
+
+## Preview: Python SDK
+
+```python
+from klayrai import KlayrAI
+
+client = KlayrAI(
+    api_key=os.environ["KLAYRAI_API_KEY"],
+    version="2026-03-01",
+)
+
+# List campaigns
+campaigns = client.campaigns.list(page_size=10)
+
+# Run a diagnostic
+diagnostic = client.diagnostics.run(
+    account_id="act_123456789",
+    campaign_id="camp_abc123",
+    date_start="2026-03-03",
+    date_end="2026-03-10",
+)
+
+# Wait for completion
+result = client.diagnostics.wait_for_completion(
+    diagnostic.id,
+    poll_interval=2.0,
+    timeout=30.0,
+)
+
+print(result.summary)
+print(result.issues)
+print(result.recommendations)
+```
+
+## Using the API directly
+
+Until the SDKs are available, you can use any HTTP client to interact with the API. See the [Authentication](/authentication) page for header requirements and the [API Reference](/api-reference/diagnostics) for endpoint documentation.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.klayrai.com/v1/campaigns" \
+  -H "x-api-key: $KLAYRAI_API_KEY" \
+  -H "klayrai-version: 2026-03-01"
+```
+
+```javascript fetch
+const response = await fetch("https://api.klayrai.com/v1/campaigns", {
+  headers: {
+    "x-api-key": process.env.KLAYRAI_API_KEY,
+    "klayrai-version": "2026-03-01",
+  },
+});
+```
+
+```python requests
+import requests
+
+response = requests.get(
+    "https://api.klayrai.com/v1/campaigns",
+    headers={
+        "x-api-key": os.environ["KLAYRAI_API_KEY"],
+        "klayrai-version": "2026-03-01",
+    },
+)
+```
+
+</CodeGroup>
+
+## Stay updated
+
+To be notified when SDKs are released:
+
+- Watch the [GitHub repository](https://github.com/NostroCEO/KlayrAI)
+- Follow updates on [klayrai.com](https://klayrai.com)
+- Check this page for announcements
+
+<Note>
+  Community-built client libraries are welcome. If you build a wrapper for KlayrAI's API, let us know at [support@klayrai.com](mailto:support@klayrai.com) and we may feature it here.
+</Note>

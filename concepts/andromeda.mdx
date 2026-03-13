@@ -1,0 +1,153 @@
+---
+title: "Andromeda"
+description: "KlayrAI's user intelligence layer that adapts diagnostics to your decision-making style"
+---
+
+# Andromeda
+
+Andromeda is KlayrAI's user intelligence layer. It builds a behavioral profile of each user over time and uses that profile to adapt every diagnostic, recommendation, and report to match your decision-making style.
+
+## Why personalization matters
+
+Two media buyers looking at the same campaign data may need completely different advice:
+
+- A **conservative buyer** managing a client's budget wants cautious, low-risk suggestions with proven track records
+- An **aggressive growth marketer** spending their own money wants bold scaling recommendations that maximize upside
+
+Andromeda ensures that KlayrAI speaks your language and recommends actions you'll actually take.
+
+## The UserBehaviorProfile
+
+Every KlayrAI user has a `UserBehaviorProfile` that captures their preferences and patterns:
+
+| Field | Type | Description |
+|---|---|---|
+| `riskAppetite` | `LOW`, `MEDIUM`, `HIGH` | How much risk the user is comfortable with in budget changes and targeting experiments |
+| `focusMetric` | `ROAS`, `CPA`, `CPM`, `CTR`, `VOLUME`, `REACH` | The primary KPI the user optimizes for |
+| `preferredActions` | `string[]` | Actions the user has historically approved (e.g., "increase_budget", "refresh_creative", "narrow_audience") |
+| `avgManagedBudget` | `number` | Average daily budget across all managed campaigns |
+| `recommendationApplyRate` | `number` | Percentage of KlayrAI recommendations the user has approved and applied |
+
+## How the profile is built
+
+Andromeda computes the profile from the `UserEvent` table, which tracks every meaningful interaction:
+
+### Events tracked
+
+| Event | Signal |
+|---|---|
+| Recommendation approved | Indicates comfort with that action type and risk level |
+| Recommendation dismissed | Indicates discomfort or disagreement with the suggestion |
+| Manual campaign changes | Reveals preferred optimization patterns |
+| Diagnostic frequency | Shows how actively the user monitors campaigns |
+| Dashboard focus | Which metrics and views the user spends time on |
+| Budget change patterns | Historical budget adjustments reveal risk tolerance |
+
+### Computation schedule
+
+Profiles are recomputed **weekly** via a scheduled job. The computation looks at the trailing 30 days of user events with a decay factor — recent behavior is weighted more heavily than older behavior.
+
+<Note>
+  New users start with a default profile (MEDIUM risk appetite, ROAS focus metric) until enough behavioral data is collected — typically after 5-10 diagnostic interactions.
+</Note>
+
+## How Andromeda adapts diagnostics
+
+The user's Andromeda profile is injected into every Claude diagnostic call as context. This changes the analysis in several ways:
+
+### Risk appetite adaptation
+
+<AccordionGroup>
+  <Accordion title="LOW risk appetite">
+    - Recommendations are conservative and incremental
+    - Budget changes are capped at 10-15% adjustments
+    - "Wait and monitor" is suggested when data is ambiguous
+    - Emphasis on protecting current performance
+    - Language: "Consider", "You might want to", "A safe approach would be"
+  </Accordion>
+
+  <Accordion title="MEDIUM risk appetite">
+    - Balanced recommendations with moderate ambition
+    - Budget changes of 15-30% suggested when evidence supports it
+    - Both upside potential and downside risks are presented
+    - Language: "We recommend", "The data supports", "This should improve"
+  </Accordion>
+
+  <Accordion title="HIGH risk appetite">
+    - Aggressive scaling and experimentation encouraged
+    - Budget changes of 30-50%+ when opportunity exists
+    - Focus on maximum upside with acceptable risk
+    - Faster iteration cycles recommended
+    - Language: "You should", "The opportunity is clear", "Act now to capture"
+  </Accordion>
+</AccordionGroup>
+
+### Focus metric adaptation
+
+The user's primary KPI determines how issues are prioritized and which recommendations come first:
+
+| Focus metric | Prioritization behavior |
+|---|---|
+| **ROAS** | Efficiency issues ranked highest. CPA creep and budget waste flagged aggressively. |
+| **CPA** | Cost-per-acquisition is the north star. Learning phase and creative fatigue prioritized. |
+| **CPM** | Auction costs monitored closely. Overlap and audience saturation ranked highest. |
+| **CTR** | Creative performance emphasized. Fatigue and ad relevance issues prioritized. |
+| **VOLUME** | Conversion volume is key. Scaling opportunities and budget headroom highlighted. |
+| **REACH** | Audience expansion opportunities prioritized. Saturation flagged early. |
+
+### Recommendation filtering
+
+Andromeda tracks which types of recommendations users historically approve. If a user consistently dismisses "expand audience" suggestions but approves "refresh creative" suggestions, future diagnostics will:
+
+1. Rank creative-related recommendations higher
+2. Provide more detail and confidence data for audience recommendations (to build trust)
+3. Frame audience suggestions in terms the user responds to
+
+## Example: Same campaign, different profiles
+
+Consider a campaign with declining ROAS (2.1x, down from 3.0x) and rising CPA.
+
+### Profile A: Conservative, ROAS-focused
+
+> **Risk level: HIGH**
+>
+> Your ROAS has declined 30% over the past 7 days. The primary driver is creative fatigue in your "Broad Lookalike" ad set.
+>
+> **Recommendation:** Pause the underperforming creatives and introduce 3 new variations based on your top-performing angles. This is a low-risk change that should stabilize ROAS within 5-7 days.
+>
+> Consider reducing the daily budget by 15% until performance recovers.
+
+### Profile B: Aggressive, VOLUME-focused
+
+> **Risk level: MEDIUM**
+>
+> Your campaign is showing signs of creative fatigue, but overall conversion volume remains strong at 142 this week. ROAS has dipped to 2.1x.
+>
+> **Recommendation:** Keep current spend levels to maintain volume. Immediately launch 5 new creatives to rotate against fatigued ones. If new creatives perform, increase budget by 30% to capitalize on the refreshed creative set.
+>
+> The volume opportunity outweighs the temporary ROAS dip.
+
+<Note>
+  Same data, same issues — completely different tone, recommendations, and priorities. This is the value of Andromeda.
+</Note>
+
+## API access
+
+When using the API, the `andromedaContext` field in diagnostic responses shows how the profile influenced the analysis:
+
+```json
+{
+  "andromedaContext": {
+    "riskAppetite": "MEDIUM",
+    "focusMetric": "ROAS",
+    "adaptations": "Recommendations prioritize ROAS recovery over volume. Conservative budget suggestions aligned with medium risk appetite."
+  }
+}
+```
+
+## Privacy
+
+- Andromeda profiles are stored per-user and scoped to their workspace
+- Profile data is never shared between users or workspaces
+- Users can reset their profile at any time from **Settings > Andromeda**
+- Profile data is not used to train AI models

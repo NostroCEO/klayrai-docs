@@ -1,0 +1,71 @@
+---
+title: "Changelog"
+description: "Release history and updates for the KlayrAI platform and API"
+---
+
+# Changelog
+
+All notable changes to the KlayrAI platform and API are documented here. Dates use the format YYYY-MM-DD.
+
+---
+
+## v1.1.0 — 2026-03-12
+
+**Access model & auth redesign**
+
+### Platform
+
+- **Demo-first access model** — New users request access via the demo form on [klayrai.com](https://www.klayrai.com). Accounts are provisioned after review — no public sign-up
+- **Redesigned sign-in page** — Split layout inspired by editorial minimal design with interactive particle background and marketing panel
+- **Agency pricing** — Now displayed as "Custom" instead of a fixed price
+- **Updated CTAs** — All landing page calls-to-action now route to the Request Demo form
+
+---
+
+## v1.0.0 — 2026-03-11
+
+**Initial release**
+
+KlayrAI launches with full Meta Ads diagnostic capabilities, the Andromeda user intelligence layer, and the Agency API.
+
+### Platform
+
+- **Meta OAuth integration** — Connect Meta Business accounts with read-only permissions via OAuth 2.0
+- **Campaign dashboard** — View all campaigns, ad sets, and ads with real-time synced data from Meta Marketing API v23.0
+- **AI diagnostic engine** — Run AI-powered diagnostics on any campaign with plain-language results in under 10 seconds
+- **6 diagnostic categories** — Creative fatigue, learning phase stalls, auction overlap, pacing issues, budget degradation, and audience saturation
+- **Risk scoring** — Four-tier risk classification (LOW, MEDIUM, HIGH, CRITICAL) with financial impact estimates
+- **Andromeda** — User intelligence layer that adapts diagnostics and recommendations to each user's risk appetite and focus metrics
+- **Report generation** — Export structured performance reports in PDF and Markdown formats
+- **White-label reports** — Agency plan users can generate reports with custom branding
+- **Stripe billing** — Three-tier pricing (Starter EUR 49/mo, Pro EUR 149/mo, Agency Custom) with self-serve management
+
+### API
+
+- `GET /v1/accounts` — List connected Meta ad accounts
+- `GET /v1/campaigns` — List campaigns with filtering, sorting, and pagination
+- `GET /v1/campaigns/:id` — Get campaign detail with ad sets, ads, and insights
+- `GET /v1/diagnostics` — List diagnostics with filtering by status, risk level, and date
+- `GET /v1/diagnostics/:id` — Get full diagnostic detail including issues and recommendations
+- `POST /v1/diagnostics` — Trigger a new AI diagnostic on a campaign
+- `GET /v1/reports` — List generated reports
+- `POST /v1/reports` — Generate a new performance report
+- `GET /v1/insights/summary` — Aggregated performance insights with breakdowns and time series
+
+### Security
+
+- AES-256-GCM encryption for Meta access tokens
+- API key authentication with `x-api-key` header
+- Rate limiting via Upstash Redis (120 reads/min, 10 writes/min per key)
+- Cloudflare Turnstile CAPTCHA on authentication forms
+- Firebase Authentication (email/password + Google OAuth)
+- Workspace-scoped data isolation with row-level security
+
+### Infrastructure
+
+- Next.js 14 App Router on Vercel
+- Supabase managed PostgreSQL with Prisma v5 ORM
+- Cloudflare DNS and CDN
+- Sentry error monitoring
+- PostHog product analytics
+- Vercel Analytics for performance monitoring
